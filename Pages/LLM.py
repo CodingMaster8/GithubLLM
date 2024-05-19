@@ -223,7 +223,9 @@ def get_auto_retriever(index, retriever_args, code, content, file_name):
                     type="datetime in iso format",
                     description="All results will be before this datetime",
 
-                )
+                ),
+                MetadataInfo(name="author", type="str", description="Author of the commit"),
+                MetadataInfo(name="summary", type="str", description="Summary of contributions"),
             ],
         )
     from llama_index.indices.vector_store.retrievers import VectorIndexAutoRetriever
@@ -356,7 +358,7 @@ def tm_demo():
         time_partition_interval=timedelta(days=7),
     )
 
-    service_context = ServiceContext.from_defaults(llm=OpenAI(model="gpt-3.5-turbo", temperature=0.3))
+    service_context = ServiceContext.from_defaults(llm=OpenAI(model="gpt-3.5-turbo", temperature=0.6))
     set_global_service_context(service_context)
     index = VectorStoreIndex.from_vector_store(vector_store=vector_store, service_context=service_context)
 
@@ -366,14 +368,21 @@ def tm_demo():
 
     # Initialize code-related variables
     code = False
+    contributions = None
     content = ""
     file_name = None
 
     # Extract the filename from the prompt if it exists
     if prompt:
         file_name = extract_filename(prompt)
-        print(file_name)
-        print(repo)
+        ## Manage a contribution summary
+        if "contributions" in prompt:
+            owner = repo.split('/')[-2]
+            token = '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'  # Replace with your actual token
+            contributions = extract_contributions(owner=owner, repo=repo.split('/')[-1], token=token)
+            author_details = prepare_data_for_summary(contributions)
+            for author, data in author_details.items():
+                prompt += f"Please summarize the following contributions of {author}: {data}"
 
     # If a filename was found in the prompt, retrieve its contents
     if file_name:
@@ -412,6 +421,30 @@ def tm_demo():
                 st.write(response.response)
                 message = {"role": "assistant", "content": response.response}
                 st.session_state.messages.append(message)  # Add response to message history
+
+
+def extract_contributions(owner, repo, token, per_page=100):
+    commits_url = f"https://api.github.com/repos/{owner}/{repo}/commits?per_page={per_page}"
+    headers = {'Authorization': f'token {token}'}
+    commits_response = requests.get(commits_url, headers=headers)
+    print(commits_response)
+    commits_data = commits_response.json()
+
+    contributions = {}
+    for commit in commits_data:
+        author = commit['commit']['author']['name']
+        message = commit['commit']['message']
+        contributions.setdefault(author, []).append(message)
+
+    return contributions
+
+def prepare_data_for_summary(contributions):
+    author_details = {}
+    for author, commits in contributions.items():
+        # Combine all commits into a single string per author
+        detailed_summary = f"Contributions by {author} include:\n" + "\n".join(commits)
+        author_details[author] = detailed_summary
+    return author_details
 
 # Configure the Streamlit page
 st.set_page_config(page_title="Github LLM Beta", page_icon="🧑‍💼")
