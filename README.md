@@ -1,6 +1,8 @@
 # Github LLM
  Time Aware Github Commits LLM
 
+ ![ChatBot making Responses about each author contribution.](https://d112y698adiu2z.cloudfront.net/photos/production/software_photos/002/898/305/datas/original.jpeg)
+
 ## Inspiration
 Every Software Developer team uses Github as its primary way to share code and work together. The problem is that when thins get big, commits get very difficult to get tracked, and also very difficult for each individual to know what is everyone doing inside the repository. That's why we built a Chabot able to digest all the repository data efficiently and give insights with any questions you make.
 
