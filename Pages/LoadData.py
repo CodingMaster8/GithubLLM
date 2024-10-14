@@ -27,7 +27,7 @@ from git import Repo
 
 from llama_index.text_splitter import SentenceSplitter
 
-
+"""Logic for loading github repository data, connecting to db & setting up Timescale db"""
 
 def create_uuid(date_string: str):
     """ Takes a string date_string representing a date and time in ISO format (YYYY-MM-DDTHH:MM:SS) as input.
@@ -322,5 +322,5 @@ if st.secrets.get("ENABLE_LOAD") == 1:
     load_git_history()
 else:
     st.warning(
-        "Loading is disabled on the demo site. Please follow the instructions in the [README](https://github.com/cevian-streamlit/tsv-timemachine/tree/main) to enable loading.")
-# show_code(tm_demo)
+        "Loading is disabled.")
+
